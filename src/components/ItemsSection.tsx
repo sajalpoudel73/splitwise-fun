@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import ItemCard from "./ItemCard";
@@ -24,6 +25,7 @@ interface Item {
 
 interface ItemsSectionProps {
   items: Item[];
+  people: string[];  // Added this prop to the interface
   onAddItem: (item: Item) => void;
   onEditItem: (id: string, field: string, value: any) => void;
   onDeleteItem: (id: string) => void;
@@ -33,6 +35,7 @@ interface ItemsSectionProps {
 
 const ItemsSection = ({
   items,
+  people,  // Added to destructuring
   onAddItem,
   onEditItem,
   onDeleteItem,
@@ -161,6 +164,7 @@ const ItemsSection = ({
           <ItemCard
             key={item.id}
             {...item}
+            people={people}  // Pass people prop to ItemCard
             onEdit={onEditItem}
             onDelete={() => onDeleteItem(item.id)}
           />
