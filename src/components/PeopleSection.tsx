@@ -46,15 +46,15 @@ const PeopleSection = ({
 
   const handleInputChange = async (value: string) => {
     setNewPersonName(value);
-    try {
-      if (value.trim().length > 0) {
+    if (value.trim().length > 0) {
+      try {
         const results = await getSuggestions(value);
-        setSuggestions(results ?? []);
-      } else {
+        setSuggestions(results || []);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
         setSuggestions([]);
       }
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
+    } else {
       setSuggestions([]);
     }
   };
@@ -82,20 +82,24 @@ const PeopleSection = ({
                   value={newPersonName}
                   onValueChange={handleInputChange}
                 />
-                <CommandEmpty>No suggestions found.</CommandEmpty>
-                <CommandGroup>
-                  {(suggestions || []).map((suggestion) => (
-                    <CommandItem
-                      key={suggestion}
-                      onSelect={() => {
-                        setNewPersonName(suggestion);
-                        setOpen(false);
-                      }}
-                    >
-                      {suggestion}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                {suggestions.length === 0 ? (
+                  <CommandEmpty>No suggestions found.</CommandEmpty>
+                ) : (
+                  <CommandGroup>
+                    {suggestions.map((suggestion) => (
+                      <CommandItem
+                        key={suggestion}
+                        value={suggestion}
+                        onSelect={() => {
+                          setNewPersonName(suggestion);
+                          setOpen(false);
+                        }}
+                      >
+                        {suggestion}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
               </Command>
             </PopoverContent>
           </Popover>

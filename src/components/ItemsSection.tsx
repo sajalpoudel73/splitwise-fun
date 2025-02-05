@@ -66,10 +66,10 @@ const ItemsSection = ({
 
   const handleNameChange = async (value: string) => {
     setNewItem({ ...newItem, name: value });
-    try {
-      if (value.trim().length > 0) {
+    if (value.trim().length > 0) {
+      try {
         const results = await getSuggestions(value);
-        setSuggestions(results ?? []);
+        setSuggestions(results || []);
         
         const exactMatch = results?.find(
           (s) => s.toLowerCase() === value.toLowerCase()
@@ -80,11 +80,11 @@ const ItemsSection = ({
             setNewItem((prev) => ({ ...prev, unitPrice: price }));
           }
         }
-      } else {
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
         setSuggestions([]);
       }
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
+    } else {
       setSuggestions([]);
     }
   };
@@ -112,25 +112,29 @@ const ItemsSection = ({
                   value={newItem.name}
                   onValueChange={handleNameChange}
                 />
-                <CommandEmpty>No suggestions found.</CommandEmpty>
-                <CommandGroup>
-                  {(suggestions || []).map((suggestion) => (
-                    <CommandItem
-                      key={suggestion}
-                      onSelect={async () => {
-                        const price = await getItemPrice(suggestion);
-                        setNewItem({
-                          ...newItem,
-                          name: suggestion,
-                          unitPrice: price || 0,
-                        });
-                        setOpen(false);
-                      }}
-                    >
-                      {suggestion}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                {suggestions.length === 0 ? (
+                  <CommandEmpty>No suggestions found.</CommandEmpty>
+                ) : (
+                  <CommandGroup>
+                    {suggestions.map((suggestion) => (
+                      <CommandItem
+                        key={suggestion}
+                        value={suggestion}
+                        onSelect={async () => {
+                          const price = await getItemPrice(suggestion);
+                          setNewItem({
+                            ...newItem,
+                            name: suggestion,
+                            unitPrice: price || 0,
+                          });
+                          setOpen(false);
+                        }}
+                      >
+                        {suggestion}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
               </Command>
             </PopoverContent>
           </Popover>
