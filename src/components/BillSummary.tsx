@@ -7,6 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Item {
   id: string;
@@ -32,6 +35,7 @@ const BillSummary = ({
   onPaidAmountChange,
 }: BillSummaryProps) => {
   const [paidAmount, setPaidAmount] = React.useState<number>(0);
+  const { toast } = useToast();
 
   const totalBill = items.reduce(
     (sum, item) => sum + item.units * item.unitPrice,
@@ -68,9 +72,48 @@ const BillSummary = ({
     onPaidAmountChange(amount);
   };
 
+  const copyToClipboard = async () => {
+    const tableData = Object.entries(splits)
+      .map(([person, amount]) => {
+        if (paidAmount < totalBill && paidAmount > 0) {
+          return `${person}\t${(amount * (totalBill / paidAmount)).toFixed(2)}\t${amount.toFixed(2)}`;
+        }
+        return `${person}\t${amount.toFixed(2)}`;
+      })
+      .join('\n');
+
+    const header = paidAmount < totalBill && paidAmount > 0
+      ? "Person\tOriginal Amount\tDiscounted Amount\n"
+      : "Person\tAmount\n";
+
+    try {
+      await navigator.clipboard.writeText(header + tableData);
+      toast({
+        title: "Copied to clipboard",
+        description: "The bill summary has been copied to your clipboard.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy the bill summary to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card className="p-6 mt-6">
-      <h2 className="text-2xl font-semibold mb-4 text-bill-500">Bill Summary</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-bill-500">Bill Summary</h2>
+        <Button
+          onClick={copyToClipboard}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Copy className="h-4 w-4" />
+          Copy Summary
+        </Button>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div>

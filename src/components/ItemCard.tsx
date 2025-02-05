@@ -24,7 +24,7 @@ const ItemCard = ({
     e.preventDefault();
     const personName = e.dataTransfer.getData("text/plain");
     if (!consumers.includes(personName)) {
-      onEdit(id, "consumers", [...consumers]);
+      onEdit(id, "consumers", [...consumers, personName]);
     }
   };
 
