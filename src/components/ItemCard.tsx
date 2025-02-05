@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 
@@ -7,6 +8,7 @@ interface ItemCardProps {
   units: number;
   unitPrice: number;
   consumers: string[];
+  people: string[];  // Added this prop to the interface
   onEdit: (id: string, field: string, value: any) => void;
   onDelete: () => void;
 }
@@ -17,6 +19,7 @@ const ItemCard = ({
   units,
   unitPrice,
   consumers,
+  people,  // Added to destructuring
   onEdit,
   onDelete,
 }: ItemCardProps) => {
