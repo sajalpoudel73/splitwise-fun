@@ -25,7 +25,7 @@ interface Item {
 
 interface ItemsSectionProps {
   items: Item[];
-  people: string[];  // Added this prop to the interface
+  people: string[];
   onAddItem: (item: Item) => void;
   onEditItem: (id: string, field: string, value: any) => void;
   onDeleteItem: (id: string) => void;
@@ -35,7 +35,7 @@ interface ItemsSectionProps {
 
 const ItemsSection = ({
   items,
-  people,  // Added to destructuring
+  people,
   onAddItem,
   onEditItem,
   onDeleteItem,
@@ -60,26 +60,32 @@ const ItemsSection = ({
       });
       setNewItem({ name: "", units: 0, unitPrice: 0 });
       setOpen(false);
+      setSuggestions([]); // Clear suggestions after submission
     }
   };
 
   const handleNameChange = async (value: string) => {
     setNewItem({ ...newItem, name: value });
-    if (value.trim().length > 0) {
-      const results = await getSuggestions(value);
-      setSuggestions(results);
-      
-      // If exact match found, get the price
-      const exactMatch = results.find(
-        (s) => s.toLowerCase() === value.toLowerCase()
-      );
-      if (exactMatch) {
-        const price = await getItemPrice(exactMatch);
-        if (price !== null) {
-          setNewItem((prev) => ({ ...prev, unitPrice: price }));
+    try {
+      if (value.trim().length > 0) {
+        const results = await getSuggestions(value);
+        setSuggestions(Array.isArray(results) ? results : []);
+        
+        // If exact match found, get the price
+        const exactMatch = results.find(
+          (s) => s.toLowerCase() === value.toLowerCase()
+        );
+        if (exactMatch) {
+          const price = await getItemPrice(exactMatch);
+          if (price !== null) {
+            setNewItem((prev) => ({ ...prev, unitPrice: price }));
+          }
         }
+      } else {
+        setSuggestions([]);
       }
-    } else {
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
       setSuggestions([]);
     }
   };
@@ -159,12 +165,12 @@ const ItemsSection = ({
         </button>
       </form>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4">
         {items.map((item) => (
           <ItemCard
             key={item.id}
             {...item}
-            people={people}  // Pass people prop to ItemCard
+            people={people}
             onEdit={onEditItem}
             onDelete={() => onDeleteItem(item.id)}
           />

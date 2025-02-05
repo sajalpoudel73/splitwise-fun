@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import PersonCard from "./PersonCard";
@@ -39,15 +40,21 @@ const PeopleSection = ({
       onAddPerson(newPersonName.trim());
       setNewPersonName("");
       setOpen(false);
+      setSuggestions([]); // Clear suggestions after submission
     }
   };
 
   const handleInputChange = async (value: string) => {
     setNewPersonName(value);
-    if (value.trim().length > 0) {
-      const results = await getSuggestions(value);
-      setSuggestions(results);
-    } else {
+    try {
+      if (value.trim().length > 0) {
+        const results = await getSuggestions(value);
+        setSuggestions(Array.isArray(results) ? results : []);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
       setSuggestions([]);
     }
   };
