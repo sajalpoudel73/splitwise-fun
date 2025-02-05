@@ -2,18 +2,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import ItemCard from "./ItemCard";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 interface Item {
   id: string;
@@ -47,8 +35,6 @@ const ItemsSection = ({
     units: 0,
     unitPrice: 0,
   });
-  const [suggestions, setSuggestions] = React.useState<string[]>([]);
-  const [open, setOpen] = React.useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,33 +45,30 @@ const ItemsSection = ({
         consumers: [],
       });
       setNewItem({ name: "", units: 0, unitPrice: 0 });
-      setOpen(false);
-      setSuggestions([]);
     }
   };
 
-  const handleNameChange = async (value: string) => {
+  const handleNameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setNewItem({ ...newItem, name: value });
+    
     if (value.trim().length > 0) {
       try {
         const results = await getSuggestions(value);
-        setSuggestions(results || []);
-        
         const exactMatch = results?.find(
-          (s) => s.toLowerCase() === value.toLowerCase()
+          (s) => s.toLowerCase().startsWith(value.toLowerCase())
         );
         if (exactMatch) {
           const price = await getItemPrice(exactMatch);
-          if (price !== null) {
-            setNewItem((prev) => ({ ...prev, unitPrice: price }));
-          }
+          setNewItem(prev => ({
+            ...prev,
+            name: exactMatch,
+            unitPrice: price || prev.unitPrice
+          }));
         }
       } catch (error) {
         console.error("Error fetching suggestions:", error);
-        setSuggestions([]);
       }
-    } else {
-      setSuggestions([]);
     }
   };
 
@@ -95,49 +78,13 @@ const ItemsSection = ({
 
       <form onSubmit={handleSubmit} className="mb-6">
         <div className="grid grid-cols-3 gap-4">
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <input
-                type="text"
-                value={newItem.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="Item name"
-                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
-              />
-            </PopoverTrigger>
-            <PopoverContent className="p-0 w-[300px]" align="start">
-              <Command>
-                <CommandInput 
-                  placeholder="Search items..."
-                  value={newItem.name}
-                  onValueChange={handleNameChange}
-                />
-                {suggestions.length === 0 ? (
-                  <CommandEmpty>No suggestions found.</CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {suggestions.map((suggestion) => (
-                      <CommandItem
-                        key={suggestion}
-                        value={suggestion}
-                        onSelect={async () => {
-                          const price = await getItemPrice(suggestion);
-                          setNewItem({
-                            ...newItem,
-                            name: suggestion,
-                            unitPrice: price || 0,
-                          });
-                          setOpen(false);
-                        }}
-                      >
-                        {suggestion}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <input
+            type="text"
+            value={newItem.name}
+            onChange={handleNameChange}
+            placeholder="Item name"
+            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
+          />
           <input
             type="number"
             value={newItem.units}
