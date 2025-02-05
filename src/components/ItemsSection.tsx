@@ -107,10 +107,14 @@ const ItemsSection = ({
             </PopoverTrigger>
             <PopoverContent className="p-0 w-[300px]" align="start">
               <Command>
-                <CommandInput placeholder="Search items..." />
+                <CommandInput 
+                  placeholder="Search items..."
+                  value={newItem.name}
+                  onValueChange={handleNameChange}
+                />
                 <CommandEmpty>No suggestions found.</CommandEmpty>
                 <CommandGroup>
-                  {suggestions.map((suggestion) => (
+                  {(suggestions || []).map((suggestion) => (
                     <CommandItem
                       key={suggestion}
                       onSelect={async () => {

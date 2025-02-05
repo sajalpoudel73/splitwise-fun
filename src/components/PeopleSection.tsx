@@ -77,10 +77,14 @@ const PeopleSection = ({
             </PopoverTrigger>
             <PopoverContent className="p-0 w-[300px]" align="start">
               <Command>
-                <CommandInput placeholder="Search people..." />
+                <CommandInput 
+                  placeholder="Search people..."
+                  value={newPersonName}
+                  onValueChange={handleInputChange}
+                />
                 <CommandEmpty>No suggestions found.</CommandEmpty>
                 <CommandGroup>
-                  {suggestions.map((suggestion) => (
+                  {(suggestions || []).map((suggestion) => (
                     <CommandItem
                       key={suggestion}
                       onSelect={() => {
