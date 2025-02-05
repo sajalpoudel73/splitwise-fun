@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import PeopleSection from "./PeopleSection";
 import ItemsSection from "./ItemsSection";
@@ -33,13 +34,17 @@ const BillSplitter = () => {
 
   useEffect(() => {
     const initialize = async () => {
-      await initDB();
-      const latestBill = await getLatestBill();
-      if (latestBill) {
-        setPeople(latestBill.people);
-        setItems(latestBill.items);
-        setPayer(latestBill.payer);
-        setPaidAmount(latestBill.paidAmount);
+      try {
+        await initDB();
+        const latestBill = await getLatestBill();
+        if (latestBill) {
+          setPeople(latestBill.people || []);
+          setItems(latestBill.items || []);
+          setPayer(latestBill.payer || "");
+          setPaidAmount(latestBill.paidAmount || 0);
+        }
+      } catch (error) {
+        console.error("Failed to initialize DB:", error);
       }
     };
     initialize();
@@ -48,13 +53,17 @@ const BillSplitter = () => {
   useEffect(() => {
     const saveBill = async () => {
       if (people.length > 0 || items.length > 0) {
-        await saveLatestBill({
-          people,
-          items,
-          payer,
-          paidAmount,
-          date: new Date(),
-        });
+        try {
+          await saveLatestBill({
+            people,
+            items,
+            payer,
+            paidAmount,
+            date: new Date(),
+          });
+        } catch (error) {
+          console.error("Failed to save bill:", error);
+        }
       }
     };
     saveBill();
@@ -131,15 +140,24 @@ const BillSplitter = () => {
   };
 
   const handleNewBill = async () => {
-    await clearLatestBill();
-    setPeople([]);
-    setItems([]);
-    setPayer("");
-    setPaidAmount(0);
-    toast({
-      title: "New Bill Started",
-      description: "All previous data has been cleared.",
-    });
+    try {
+      await clearLatestBill();
+      setPeople([]);
+      setItems([]);
+      setPayer("");
+      setPaidAmount(0);
+      toast({
+        title: "New Bill Started",
+        description: "All previous data has been cleared.",
+      });
+    } catch (error) {
+      console.error("Failed to clear bill:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear previous data.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -167,6 +185,7 @@ const BillSplitter = () => {
         
         <ItemsSection
           items={items}
+          people={people}
           onAddItem={handleAddItem}
           onEditItem={handleEditItem}
           onDeleteItem={handleDeleteItem}

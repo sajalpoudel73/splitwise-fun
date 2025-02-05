@@ -1,3 +1,4 @@
+
 interface StoredItem {
   name: string;
   unitPrice: number;
@@ -79,18 +80,28 @@ export const getLatestBill = async (): Promise<StoredBill | null> => {
   const tx = db.transaction('latestBill', 'readonly');
   const store = tx.objectStore('latestBill');
   
-  const bill = await store.get('latest');
-  if (!bill) return null;
+  return new Promise((resolve, reject) => {
+    const request = store.get('latest');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const bill = request.result;
+      if (!bill) {
+        resolve(null);
+        return;
+      }
 
-  const daysDiff = (new Date().getTime() - new Date(bill.date).getTime()) / (1000 * 3600 * 24);
-  if (daysDiff >= 1) {
-    const tx = db.transaction('latestBill', 'readwrite');
-    const store = tx.objectStore('latestBill');
-    await store.clear();
-    return null;
-  }
-
-  return bill;
+      const daysDiff = (new Date().getTime() - new Date(bill.date).getTime()) / (1000 * 3600 * 24);
+      if (daysDiff >= 1) {
+        // If bill is a day or more old, clear it and return null
+        const tx = db.transaction('latestBill', 'readwrite');
+        const store = tx.objectStore('latestBill');
+        store.clear();
+        resolve(null);
+      } else {
+        resolve(bill);
+      }
+    };
+  });
 };
 
 export const clearLatestBill = async (): Promise<void> => {
@@ -105,11 +116,18 @@ export const getSuggestions = async (type: 'items' | 'people', query: string): P
   const tx = db.transaction(type, 'readonly');
   const store = tx.objectStore(type);
   
-  const all = await store.getAll();
-  return all
-    .map(item => item.name)
-    .filter(name => name.toLowerCase().includes(query.toLowerCase()))
-    .slice(0, 5);
+  return new Promise((resolve, reject) => {
+    const request = store.getAll();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const items = request.result;
+      const suggestions = items
+        .map(item => item.name)
+        .filter(name => name.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 5);
+      resolve(suggestions);
+    };
+  });
 };
 
 export const getItemPrice = async (name: string): Promise<number | null> => {
@@ -117,8 +135,14 @@ export const getItemPrice = async (name: string): Promise<number | null> => {
   const tx = db.transaction('items', 'readonly');
   const store = tx.objectStore('items');
   
-  const item = await store.get(capitalizeWords(name));
-  return item ? item.unitPrice : null;
+  return new Promise((resolve, reject) => {
+    const request = store.get(capitalizeWords(name));
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const item = request.result;
+      resolve(item ? item.unitPrice : null);
+    };
+  });
 };
 
 const openDB = (): Promise<IDBDatabase> => {
