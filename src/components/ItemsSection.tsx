@@ -69,10 +69,9 @@ const ItemsSection = ({
     try {
       if (value.trim().length > 0) {
         const results = await getSuggestions(value);
-        setSuggestions(Array.isArray(results) ? results : []);
+        setSuggestions(results ?? []);
         
-        // If exact match found, get the price
-        const exactMatch = results.find(
+        const exactMatch = results?.find(
           (s) => s.toLowerCase() === value.toLowerCase()
         );
         if (exactMatch) {
@@ -106,31 +105,30 @@ const ItemsSection = ({
                 className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
               />
             </PopoverTrigger>
-            {suggestions.length > 0 && (
-              <PopoverContent className="p-0" align="start">
-                <Command>
-                  <CommandEmpty>No suggestions found.</CommandEmpty>
-                  <CommandGroup>
-                    {suggestions.map((suggestion) => (
-                      <CommandItem
-                        key={suggestion}
-                        onSelect={async () => {
-                          const price = await getItemPrice(suggestion);
-                          setNewItem({
-                            ...newItem,
-                            name: suggestion,
-                            unitPrice: price || 0,
-                          });
-                          setOpen(false);
-                        }}
-                      >
-                        {suggestion}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            )}
+            <PopoverContent className="p-0 w-[300px]" align="start">
+              <Command>
+                <CommandInput placeholder="Search items..." />
+                <CommandEmpty>No suggestions found.</CommandEmpty>
+                <CommandGroup>
+                  {suggestions.map((suggestion) => (
+                    <CommandItem
+                      key={suggestion}
+                      onSelect={async () => {
+                        const price = await getItemPrice(suggestion);
+                        setNewItem({
+                          ...newItem,
+                          name: suggestion,
+                          unitPrice: price || 0,
+                        });
+                        setOpen(false);
+                      }}
+                    >
+                      {suggestion}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
           </Popover>
           <input
             type="number"
