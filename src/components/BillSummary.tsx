@@ -76,21 +76,21 @@ const BillSummary = ({
     const tableData = Object.entries(splits)
       .map(([person, amount]) => {
         if (paidAmount < totalBill && paidAmount > 0) {
-          return `${person}\t${(amount * (totalBill / paidAmount)).toFixed(2)}\t${amount.toFixed(2)}`;
+          return `| ${person} | $${(amount * (totalBill / paidAmount)).toFixed(2)} | $${amount.toFixed(2)} |`;
         }
-        return `${person}\t${amount.toFixed(2)}`;
+        return `| ${person} | $${amount.toFixed(2)} |`;
       })
       .join('\n');
 
     const header = paidAmount < totalBill && paidAmount > 0
-      ? "Person\tOriginal Amount\tDiscounted Amount\n"
-      : "Person\tAmount\n";
+      ? "| Person | Original Amount | Discounted Amount |\n|---------|-----------------|------------------|\n"
+      : "| Person | Amount |\n|---------|----------|\n";
 
     try {
       await navigator.clipboard.writeText(header + tableData);
       toast({
         title: "Copied to clipboard",
-        description: "The bill summary has been copied to your clipboard.",
+        description: "The bill summary has been copied to your clipboard in Markdown table format.",
       });
     } catch (err) {
       toast({

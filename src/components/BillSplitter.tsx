@@ -1,7 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import PeopleSection from "./PeopleSection";
 import ItemsSection from "./ItemsSection";
 import BillSummary from "./BillSummary";
+import { Button } from "./ui/button";
+import { Trash2 } from "lucide-react";
+import { useToast } from "./ui/use-toast";
+import {
+  initDB,
+  saveItem,
+  savePerson,
+  saveLatestBill,
+  getLatestBill,
+  clearLatestBill,
+  getSuggestions,
+  getItemPrice,
+} from "../utils/indexedDB";
 
 interface Item {
   id: string;
@@ -16,10 +29,45 @@ const BillSplitter = () => {
   const [items, setItems] = React.useState<Item[]>([]);
   const [payer, setPayer] = React.useState<string>("");
   const [paidAmount, setPaidAmount] = React.useState<number>(0);
+  const { toast } = useToast();
 
-  const handleAddPerson = (name: string) => {
-    if (!people.includes(name)) {
-      setPeople([...people, name]);
+  useEffect(() => {
+    const initialize = async () => {
+      await initDB();
+      const latestBill = await getLatestBill();
+      if (latestBill) {
+        setPeople(latestBill.people);
+        setItems(latestBill.items);
+        setPayer(latestBill.payer);
+        setPaidAmount(latestBill.paidAmount);
+      }
+    };
+    initialize();
+  }, []);
+
+  useEffect(() => {
+    const saveBill = async () => {
+      if (people.length > 0 || items.length > 0) {
+        await saveLatestBill({
+          people,
+          items,
+          payer,
+          paidAmount,
+          date: new Date(),
+        });
+      }
+    };
+    saveBill();
+  }, [people, items, payer, paidAmount]);
+
+  const handleAddPerson = async (name: string) => {
+    const capitalizedName = name.split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    
+    if (!people.includes(capitalizedName)) {
+      setPeople([...people, capitalizedName]);
+      await savePerson(capitalizedName);
     }
   };
 
@@ -52,15 +100,29 @@ const BillSplitter = () => {
     );
   };
 
-  const handleAddItem = (item: Item) => {
-    setItems([...items, item]);
+  const handleAddItem = async (item: Item) => {
+    const newItem = {
+      ...item,
+      name: item.name.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ')
+    };
+    setItems([...items, newItem]);
+    await saveItem(newItem.name, newItem.unitPrice);
   };
 
-  const handleEditItem = (id: string, field: string, value: any) => {
+  const handleEditItem = async (id: string, field: string, value: any) => {
     setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
+      items.map((item) => {
+        if (item.id === id) {
+          const updatedItem = { ...item, [field]: value };
+          if (field === 'name' || field === 'unitPrice') {
+            saveItem(updatedItem.name, updatedItem.unitPrice);
+          }
+          return updatedItem;
+        }
+        return item;
+      })
     );
   };
 
@@ -68,11 +130,31 @@ const BillSplitter = () => {
     setItems(items.filter((item) => item.id !== id));
   };
 
+  const handleNewBill = async () => {
+    await clearLatestBill();
+    setPeople([]);
+    setItems([]);
+    setPayer("");
+    setPaidAmount(0);
+    toast({
+      title: "New Bill Started",
+      description: "All previous data has been cleared.",
+    });
+  };
+
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold text-center mb-8 text-bill-500">
-        Bill Splitter
-      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-bill-500">Bill Splitter</h1>
+        <Button
+          variant="destructive"
+          onClick={handleNewBill}
+          className="flex items-center gap-2"
+        >
+          <Trash2 className="h-4 w-4" />
+          New Bill
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PeopleSection
@@ -80,6 +162,7 @@ const BillSplitter = () => {
           onAddPerson={handleAddPerson}
           onEditPerson={handleEditPerson}
           onDeletePerson={handleDeletePerson}
+          getSuggestions={(query) => getSuggestions('people', query)}
         />
         
         <ItemsSection
@@ -87,6 +170,8 @@ const BillSplitter = () => {
           onAddItem={handleAddItem}
           onEditItem={handleEditItem}
           onDeleteItem={handleDeleteItem}
+          getSuggestions={(query) => getSuggestions('items', query)}
+          getItemPrice={getItemPrice}
         />
       </div>
 

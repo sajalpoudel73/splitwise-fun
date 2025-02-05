@@ -1,6 +1,18 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import ItemCard from "./ItemCard";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface Item {
   id: string;
@@ -15,6 +27,8 @@ interface ItemsSectionProps {
   onAddItem: (item: Item) => void;
   onEditItem: (id: string, field: string, value: any) => void;
   onDeleteItem: (id: string) => void;
+  getSuggestions: (query: string) => Promise<string[]>;
+  getItemPrice: (name: string) => Promise<number | null>;
 }
 
 const ItemsSection = ({
@@ -22,12 +36,16 @@ const ItemsSection = ({
   onAddItem,
   onEditItem,
   onDeleteItem,
+  getSuggestions,
+  getItemPrice,
 }: ItemsSectionProps) => {
   const [newItem, setNewItem] = React.useState({
     name: "",
     units: 0,
     unitPrice: 0,
   });
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [open, setOpen] = React.useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +56,28 @@ const ItemsSection = ({
         consumers: [],
       });
       setNewItem({ name: "", units: 0, unitPrice: 0 });
+      setOpen(false);
+    }
+  };
+
+  const handleNameChange = async (value: string) => {
+    setNewItem({ ...newItem, name: value });
+    if (value.trim().length > 0) {
+      const results = await getSuggestions(value);
+      setSuggestions(results);
+      
+      // If exact match found, get the price
+      const exactMatch = results.find(
+        (s) => s.toLowerCase() === value.toLowerCase()
+      );
+      if (exactMatch) {
+        const price = await getItemPrice(exactMatch);
+        if (price !== null) {
+          setNewItem((prev) => ({ ...prev, unitPrice: price }));
+        }
+      }
+    } else {
+      setSuggestions([]);
     }
   };
 
@@ -47,13 +87,41 @@ const ItemsSection = ({
 
       <form onSubmit={handleSubmit} className="mb-6">
         <div className="grid grid-cols-3 gap-4">
-          <input
-            type="text"
-            value={newItem.name}
-            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-            placeholder="Item name"
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
-          />
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <input
+                type="text"
+                value={newItem.name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                placeholder="Item name"
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
+              />
+            </PopoverTrigger>
+            {suggestions.length > 0 && (
+              <PopoverContent className="p-0" align="start">
+                <Command>
+                  <CommandGroup>
+                    {suggestions.map((suggestion) => (
+                      <CommandItem
+                        key={suggestion}
+                        onSelect={async () => {
+                          const price = await getItemPrice(suggestion);
+                          setNewItem({
+                            ...newItem,
+                            name: suggestion,
+                            unitPrice: price || 0,
+                          });
+                          setOpen(false);
+                        }}
+                      >
+                        {suggestion}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            )}
+          </Popover>
           <input
             type="number"
             value={newItem.units}

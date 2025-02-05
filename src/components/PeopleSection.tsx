@@ -1,12 +1,25 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import PersonCard from "./PersonCard";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface PeopleSectionProps {
   people: string[];
   onAddPerson: (name: string) => void;
   onEditPerson: (index: number, newName: string) => void;
   onDeletePerson: (index: number) => void;
+  getSuggestions: (query: string) => Promise<string[]>;
 }
 
 const PeopleSection = ({
@@ -14,14 +27,28 @@ const PeopleSection = ({
   onAddPerson,
   onEditPerson,
   onDeletePerson,
+  getSuggestions,
 }: PeopleSectionProps) => {
   const [newPersonName, setNewPersonName] = React.useState("");
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [open, setOpen] = React.useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPersonName.trim()) {
       onAddPerson(newPersonName.trim());
       setNewPersonName("");
+      setOpen(false);
+    }
+  };
+
+  const handleInputChange = async (value: string) => {
+    setNewPersonName(value);
+    if (value.trim().length > 0) {
+      const results = await getSuggestions(value);
+      setSuggestions(results);
+    } else {
+      setSuggestions([]);
     }
   };
 
@@ -31,13 +58,36 @@ const PeopleSection = ({
       
       <form onSubmit={handleSubmit} className="mb-6">
         <div className="flex gap-2">
-          <input
-            type="text"
-            value={newPersonName}
-            onChange={(e) => setNewPersonName(e.target.value)}
-            placeholder="Enter person's name"
-            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
-          />
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <input
+                type="text"
+                value={newPersonName}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder="Enter person's name"
+                className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
+              />
+            </PopoverTrigger>
+            {suggestions.length > 0 && (
+              <PopoverContent className="p-0" align="start">
+                <Command>
+                  <CommandGroup>
+                    {suggestions.map((suggestion) => (
+                      <CommandItem
+                        key={suggestion}
+                        onSelect={() => {
+                          setNewPersonName(suggestion);
+                          setOpen(false);
+                        }}
+                      >
+                        {suggestion}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            )}
+          </Popover>
           <button
             type="submit"
             className="px-4 py-2 bg-bill-400 text-white rounded-md hover:bg-bill-500 transition-colors"
