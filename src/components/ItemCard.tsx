@@ -7,7 +7,7 @@ interface ItemCardProps {
   units: number;
   unitPrice: number;
   consumers: string[];
-  onEdit: (id: string, field: string, value: string | number) => void;
+  onEdit: (id: string, field: string, value: any) => void;
   onDelete: () => void;
 }
 
@@ -24,7 +24,7 @@ const ItemCard = ({
     e.preventDefault();
     const personName = e.dataTransfer.getData("text/plain");
     if (!consumers.includes(personName)) {
-      onEdit(id, "consumers", [...consumers, personName]);
+      onEdit(id, "consumers", [...consumers]);
     }
   };
 
@@ -39,6 +39,8 @@ const ItemCard = ({
       consumers.filter((c) => c !== personName)
     );
   };
+
+  const totalAmount = units * unitPrice;
 
   return (
     <Card className="p-4 mb-4 hover:shadow-md transition-shadow">
@@ -55,7 +57,7 @@ const ItemCard = ({
           value={units}
           onChange={(e) => onEdit(id, "units", parseFloat(e.target.value) || 0)}
           className="px-2 py-1 border rounded"
-          placeholder="Units"
+          placeholder="Number of units"
           min="0"
           step="1"
         />
@@ -70,6 +72,10 @@ const ItemCard = ({
           min="0"
           step="0.01"
         />
+      </div>
+
+      <div className="text-right mb-2 text-bill-500 font-semibold">
+        Total: ${totalAmount.toFixed(2)}
       </div>
 
       <div

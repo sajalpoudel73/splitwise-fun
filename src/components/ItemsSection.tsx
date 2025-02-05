@@ -60,7 +60,7 @@ const ItemsSection = ({
             onChange={(e) =>
               setNewItem({ ...newItem, units: parseFloat(e.target.value) || 0 })
             }
-            placeholder="Units"
+            placeholder="Number of units"
             className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
             min="0"
             step="1"
@@ -88,7 +88,7 @@ const ItemsSection = ({
         </button>
       </form>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((item) => (
           <ItemCard
             key={item.id}
