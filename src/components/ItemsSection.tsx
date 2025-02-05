@@ -60,7 +60,7 @@ const ItemsSection = ({
       });
       setNewItem({ name: "", units: 0, unitPrice: 0 });
       setOpen(false);
-      setSuggestions([]); // Clear suggestions after submission
+      setSuggestions([]);
     }
   };
 
@@ -109,6 +109,7 @@ const ItemsSection = ({
             {suggestions.length > 0 && (
               <PopoverContent className="p-0" align="start">
                 <Command>
+                  <CommandEmpty>No suggestions found.</CommandEmpty>
                   <CommandGroup>
                     {suggestions.map((suggestion) => (
                       <CommandItem

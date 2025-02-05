@@ -40,7 +40,7 @@ const PeopleSection = ({
       onAddPerson(newPersonName.trim());
       setNewPersonName("");
       setOpen(false);
-      setSuggestions([]); // Clear suggestions after submission
+      setSuggestions([]);
     }
   };
 
@@ -78,6 +78,7 @@ const PeopleSection = ({
             {suggestions.length > 0 && (
               <PopoverContent className="p-0" align="start">
                 <Command>
+                  <CommandEmpty>No suggestions found.</CommandEmpty>
                   <CommandGroup>
                     {suggestions.map((suggestion) => (
                       <CommandItem
