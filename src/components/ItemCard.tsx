@@ -80,7 +80,7 @@ const ItemCard = ({
       </div>
 
       <div className="text-right mb-2 text-bill-500 font-semibold mt-2">
-        Total: ${totalAmount.toFixed(2)}
+        Total: Rs. {totalAmount.toFixed(2)}
       </div>
 
       <div

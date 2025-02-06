@@ -188,11 +188,11 @@ const BillSummary = ({
 
       <div className="mb-4">
         <div className="text-lg font-medium">
-          Total Bill: ${totalBill.toFixed(2)}
+          Total Bill: Rs. {totalBill.toFixed(2)}
         </div>
         {paidAmount < totalBill && paidAmount > 0 && (
           <div className="text-green-600">
-            Discount: ${(totalBill - paidAmount).toFixed(2)}
+            Discount: Rs. {(totalBill - paidAmount).toFixed(2)}
           </div>
         )}
       </div>
@@ -213,10 +213,10 @@ const BillSummary = ({
               <tr key={person} className="border-t">
                 <td className="px-4 py-2">{person}</td>
                 <td className="px-4 py-2 text-right">
-                  ${(amount * (totalBill / paidAmount)).toFixed(2)}
+                  Rs. {(amount * (totalBill / paidAmount)).toFixed(2)}
                 </td>
                 {paidAmount < totalBill && paidAmount > 0 && (
-                  <td className="px-4 py-2 text-right">${amount.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right">Rs. {amount.toFixed(2)}</td>
                 )}
               </tr>
             ))}
