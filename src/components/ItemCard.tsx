@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 
@@ -8,7 +7,7 @@ interface ItemCardProps {
   units: number;
   unitPrice: number;
   consumers: string[];
-  people: string[];  // Added this prop to the interface
+  people: string[];
   onEdit: (id: string, field: string, value: any) => void;
   onDelete: () => void;
 }
@@ -19,7 +18,7 @@ const ItemCard = ({
   units,
   unitPrice,
   consumers,
-  people,  // Added to destructuring
+  people,
   onEdit,
   onDelete,
 }: ItemCardProps) => {
@@ -47,37 +46,40 @@ const ItemCard = ({
 
   return (
     <Card className="p-4 mb-4 hover:shadow-md transition-shadow">
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="space-y-4">
         <input
           type="text"
           value={name}
           onChange={(e) => onEdit(id, "name", e.target.value)}
-          className="px-2 py-1 border rounded"
+          className="w-full px-2 py-1 border rounded"
           placeholder="Item name"
         />
-        <input
-          type="number"
-          value={units}
-          onChange={(e) => onEdit(id, "units", parseFloat(e.target.value) || 0)}
-          className="px-2 py-1 border rounded"
-          placeholder="Number of units"
-          min="0"
-          step="1"
-        />
-        <input
-          type="number"
-          value={unitPrice}
-          onChange={(e) =>
-            onEdit(id, "unitPrice", parseFloat(e.target.value) || 0)
-          }
-          className="px-2 py-1 border rounded"
-          placeholder="Price per unit"
-          min="0"
-          step="0.01"
-        />
+        
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            type="number"
+            value={units}
+            onChange={(e) => onEdit(id, "units", parseFloat(e.target.value) || 0)}
+            className="px-2 py-1 border rounded"
+            placeholder="Number of units"
+            min="0"
+            step="1"
+          />
+          <input
+            type="number"
+            value={unitPrice}
+            onChange={(e) =>
+              onEdit(id, "unitPrice", parseFloat(e.target.value) || 0)
+            }
+            className="px-2 py-1 border rounded"
+            placeholder="Price per unit"
+            min="0"
+            step="0.01"
+          />
+        </div>
       </div>
 
-      <div className="text-right mb-2 text-bill-500 font-semibold">
+      <div className="text-right mb-2 text-bill-500 font-semibold mt-2">
         Total: ${totalAmount.toFixed(2)}
       </div>
 
