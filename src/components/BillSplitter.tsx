@@ -161,7 +161,7 @@ const BillSplitter = () => {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-bill-500">Bill Splitter</h1>
         <Button
@@ -174,24 +174,27 @@ const BillSplitter = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PeopleSection
-          people={people}
-          onAddPerson={handleAddPerson}
-          onEditPerson={handleEditPerson}
-          onDeletePerson={handleDeletePerson}
-          getSuggestions={(query) => getSuggestions('people', query)}
-        />
-        
-        <ItemsSection
-          items={items}
-          people={people}
-          onAddItem={handleAddItem}
-          onEditItem={handleEditItem}
-          onDeleteItem={handleDeleteItem}
-          getSuggestions={(query) => getSuggestions('items', query)}
-          getItemPrice={getItemPrice}
-        />
+      <div className="grid grid-cols-3 gap-6">
+        <div className="col-span-1">
+          <PeopleSection
+            people={people}
+            onAddPerson={handleAddPerson}
+            onEditPerson={handleEditPerson}
+            onDeletePerson={handleDeletePerson}
+            getSuggestions={(query) => getSuggestions('people', query)}
+          />
+        </div>
+        <div className="col-span-2">
+          <ItemsSection
+            items={items}
+            people={people}
+            onAddItem={handleAddItem}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
+            getSuggestions={(query) => getSuggestions('items', query)}
+            getItemPrice={getItemPrice}
+          />
+        </div>
       </div>
 
       <BillSummary
