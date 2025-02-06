@@ -73,39 +73,45 @@ const BillSummary = ({
   };
 
   const copyToClipboard = async () => {
-    // Create a temporary div to hold our table
+    // Create a temporary div to hold our content
     const tempDiv = document.createElement('div');
     
+    // Add the total and payment information
+    let contentHTML = `<div style="margin-bottom: 16px;">`;
+    contentHTML += `<p style="margin: 4px 0;">Today's Total: Rs. ${totalBill.toFixed(2)}</p>`;
+    contentHTML += `<p style="margin: 4px 0;">Payment to: ${payer || 'Not specified'}</p>`;
+    contentHTML += '</div>';
+    
     // Create the table HTML
-    let tableHTML = '<table style="border-collapse: collapse; width: 100%;">';
+    contentHTML += '<table style="border-collapse: collapse; width: 100%;">';
     
     // Add header
-    tableHTML += '<thead><tr style="background-color: #f3f4f6;">';
-    tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left;">Person</th>';
+    contentHTML += '<thead><tr style="background-color: #f3f4f6;">';
+    contentHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left;">Person</th>';
     if (paidAmount < totalBill && paidAmount > 0) {
-      tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Original Amount</th>';
-      tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Discounted Amount</th>';
+      contentHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Original Amount</th>';
+      contentHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Discounted Amount</th>';
     } else {
-      tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Amount</th>';
+      contentHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Amount</th>';
     }
-    tableHTML += '</tr></thead><tbody>';
+    contentHTML += '</tr></thead><tbody>';
 
     // Add rows
     Object.entries(splits).forEach(([person, amount]) => {
-      tableHTML += '<tr>';
-      tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px;">${person}</td>`;
+      contentHTML += '<tr>';
+      contentHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px;">${person}</td>`;
       if (paidAmount < totalBill && paidAmount > 0) {
-        tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${(amount * (totalBill / paidAmount)).toFixed(2)}</td>`;
-        tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${amount.toFixed(2)}</td>`;
+        contentHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${(amount * (totalBill / paidAmount)).toFixed(2)}</td>`;
+        contentHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${amount.toFixed(2)}</td>`;
       } else {
-        tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${amount.toFixed(2)}</td>`;
+        contentHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${amount.toFixed(2)}</td>`;
       }
-      tableHTML += '</tr>';
+      contentHTML += '</tr>';
     });
 
-    tableHTML += '</tbody></table>';
+    contentHTML += '</tbody></table>';
     
-    tempDiv.innerHTML = tableHTML;
+    tempDiv.innerHTML = contentHTML;
     
     try {
       // Create a Blob containing the HTML
@@ -119,11 +125,12 @@ const BillSummary = ({
       });
     } catch (err) {
       // Fallback to plain text if HTML copying fails
-      const plainText = Array.from(tempDiv.querySelectorAll('tr'))
-        .map(row => Array.from(row.querySelectorAll('th, td'))
-          .map(cell => cell.textContent)
-          .join('\t'))
-        .join('\n');
+      const plainText = `Today's Total: Rs. ${totalBill.toFixed(2)}\n\nPayment to: ${payer || 'Not specified'}\n\n` +
+        Array.from(tempDiv.querySelectorAll('tr'))
+          .map(row => Array.from(row.querySelectorAll('th, td'))
+            .map(cell => cell.textContent)
+            .join('\t'))
+          .join('\n');
       
       await navigator.clipboard.writeText(plainText);
       
