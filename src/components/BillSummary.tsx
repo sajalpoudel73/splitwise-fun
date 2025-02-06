@@ -73,29 +73,63 @@ const BillSummary = ({
   };
 
   const copyToClipboard = async () => {
-    const tableData = Object.entries(splits)
-      .map(([person, amount]) => {
-        if (paidAmount < totalBill && paidAmount > 0) {
-          return `| ${person} | $${(amount * (totalBill / paidAmount)).toFixed(2)} | $${amount.toFixed(2)} |`;
-        }
-        return `| ${person} | $${amount.toFixed(2)} |`;
-      })
-      .join('\n');
+    // Create a temporary div to hold our table
+    const tempDiv = document.createElement('div');
+    
+    // Create the table HTML
+    let tableHTML = '<table style="border-collapse: collapse; width: 100%;">';
+    
+    // Add header
+    tableHTML += '<thead><tr style="background-color: #f3f4f6;">';
+    tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left;">Person</th>';
+    if (paidAmount < totalBill && paidAmount > 0) {
+      tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Original Amount</th>';
+      tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Discounted Amount</th>';
+    } else {
+      tableHTML += '<th style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">Amount</th>';
+    }
+    tableHTML += '</tr></thead><tbody>';
 
-    const header = paidAmount < totalBill && paidAmount > 0
-      ? "| Person | Original Amount | Discounted Amount |\n|---------|-----------------|------------------|\n"
-      : "| Person | Amount |\n|---------|----------|\n";
+    // Add rows
+    Object.entries(splits).forEach(([person, amount]) => {
+      tableHTML += '<tr>';
+      tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px;">${person}</td>`;
+      if (paidAmount < totalBill && paidAmount > 0) {
+        tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${(amount * (totalBill / paidAmount)).toFixed(2)}</td>`;
+        tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${amount.toFixed(2)}</td>`;
+      } else {
+        tableHTML += `<td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right;">$${amount.toFixed(2)}</td>`;
+      }
+      tableHTML += '</tr>';
+    });
 
+    tableHTML += '</tbody></table>';
+    
+    tempDiv.innerHTML = tableHTML;
+    
     try {
-      await navigator.clipboard.writeText(header + tableData);
+      // Create a Blob containing the HTML
+      const blob = new Blob([tempDiv.outerHTML], { type: 'text/html' });
+      const clipboardItem = new ClipboardItem({ 'text/html': blob });
+      await navigator.clipboard.write([clipboardItem]);
+      
       toast({
         title: "Copied to clipboard",
-        description: "The bill summary has been copied to your clipboard in Markdown table format.",
+        description: "The bill summary table has been copied and can be pasted as a formatted table.",
       });
     } catch (err) {
+      // Fallback to plain text if HTML copying fails
+      const plainText = Array.from(tempDiv.querySelectorAll('tr'))
+        .map(row => Array.from(row.querySelectorAll('th, td'))
+          .map(cell => cell.textContent)
+          .join('\t'))
+        .join('\n');
+      
+      await navigator.clipboard.writeText(plainText);
+      
       toast({
-        title: "Failed to copy",
-        description: "Could not copy the bill summary to clipboard.",
+        title: "Copied as plain text",
+        description: "The bill summary has been copied as plain text due to browser limitations.",
         variant: "destructive",
       });
     }
