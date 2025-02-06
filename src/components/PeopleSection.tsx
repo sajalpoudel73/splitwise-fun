@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import PersonCard from "./PersonCard";
@@ -19,29 +18,43 @@ const PeopleSection = ({
   getSuggestions,
 }: PeopleSectionProps) => {
   const [newPersonName, setNewPersonName] = React.useState("");
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPersonName.trim()) {
       onAddPerson(newPersonName.trim());
       setNewPersonName("");
+      setSuggestions([]);
     }
   };
 
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNewPersonName(value);
+    
     if (value.trim().length > 0) {
       try {
         const results = await getSuggestions(value);
-        const exactMatch = results?.find(
-          (s) => s.toLowerCase().startsWith(value.toLowerCase())
-        );
-        if (exactMatch) {
-          setNewPersonName(exactMatch);
-        }
+        setSuggestions(results || []);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      }
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Tab' && suggestions.length > 0) {
+      e.preventDefault();
+      const exactMatch = suggestions.find(
+        (s) => s.toLowerCase().startsWith(newPersonName.toLowerCase())
+      );
+      if (exactMatch) {
+        setNewPersonName(exactMatch);
+        setSuggestions([]);
       }
     }
   };
@@ -56,7 +69,8 @@ const PeopleSection = ({
             type="text"
             value={newPersonName}
             onChange={handleInputChange}
-            placeholder="Enter person's name"
+            onKeyDown={handleKeyDown}
+            placeholder="Enter person's name (Tab to autocomplete)"
             className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
           />
           <button

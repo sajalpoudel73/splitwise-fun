@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import ItemCard from "./ItemCard";
@@ -35,6 +34,7 @@ const ItemsSection = ({
     units: 0,
     unitPrice: 0,
   });
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +45,7 @@ const ItemsSection = ({
         consumers: [],
       });
       setNewItem({ name: "", units: 0, unitPrice: 0 });
+      setSuggestions([]);
     }
   };
 
@@ -55,19 +56,30 @@ const ItemsSection = ({
     if (value.trim().length > 0) {
       try {
         const results = await getSuggestions(value);
-        const exactMatch = results?.find(
-          (s) => s.toLowerCase().startsWith(value.toLowerCase())
-        );
-        if (exactMatch) {
-          const price = await getItemPrice(exactMatch);
-          setNewItem(prev => ({
-            ...prev,
-            name: exactMatch,
-            unitPrice: price || prev.unitPrice
-          }));
-        }
+        setSuggestions(results || []);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      }
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Tab' && suggestions.length > 0) {
+      e.preventDefault();
+      const exactMatch = suggestions.find(
+        (s) => s.toLowerCase().startsWith(newItem.name.toLowerCase())
+      );
+      if (exactMatch) {
+        const price = await getItemPrice(exactMatch);
+        setNewItem(prev => ({
+          ...prev,
+          name: exactMatch,
+          unitPrice: price || prev.unitPrice
+        }));
+        setSuggestions([]);
       }
     }
   };
@@ -82,7 +94,8 @@ const ItemsSection = ({
             type="text"
             value={newItem.name}
             onChange={handleNameChange}
-            placeholder="Item name"
+            onKeyDown={handleKeyDown}
+            placeholder="Item name (Tab to autocomplete)"
             className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-bill-300"
           />
           <input
